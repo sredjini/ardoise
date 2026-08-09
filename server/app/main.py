@@ -10,9 +10,11 @@ Au démarrage, on charge le référentiel PCG en mémoire.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -113,3 +115,8 @@ def process(request: Request, body: ProcessIn) -> PipelineResult:
         retries=final.get("retries", 0),
         status=status,
     )
+
+
+_WEB_DIST = Path(__file__).resolve().parent.parent / "web-dist"
+if _WEB_DIST.exists():
+    app.mount("/", StaticFiles(directory=_WEB_DIST, html=True), name="web")

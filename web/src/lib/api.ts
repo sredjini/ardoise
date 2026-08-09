@@ -1,8 +1,8 @@
 // api.ts — Le seul point de contact avec le backend.
 import type { PipelineResult } from "./types";
 
-// URL de l'API : configurable via une variable d'env Vite, sinon localhost.
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+// URL de l'API : configurable via Vite. En production full-stack, même origine.
+const API_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? "http://localhost:8000" : "");
 
 // Appel JSON commun : messages d'erreur FR lisibles (serveur down, statut HTTP).
 async function postJson<T>(path: string, body: unknown): Promise<T> {

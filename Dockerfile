@@ -1,5 +1,13 @@
 # Fallback Dockerfile for manual Render Web Service creation from the repo root.
 # The Blueprint uses server/Dockerfile through rootDir: server.
+FROM node:24-slim AS web-build
+
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web ./
+RUN npm run build
+
 FROM python:3.13-slim
 
 RUN apt-get update \
@@ -18,6 +26,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY server/app ./app
 COPY server/data ./data
+COPY --from=web-build /web/dist ./web-dist
 
 ENV PORT=8000
 EXPOSE 8000
