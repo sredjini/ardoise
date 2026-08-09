@@ -1,0 +1,35 @@
+:root {
+  /* Terminal / éditorial monospace — réf. 2xA Studio. */
+  --paper: #f4f3ee;        /* off-white plat */
+  --panel: #f4f3ee;
+  --ink: #14130e;          /* encre quasi noire */
+  --ink-2: #35322c;        /* texte de corps (justifications) */
+  --ink-soft: #575249;     /* texte secondaire / labels — foncé, lisible */
+  --line: #d0cbbe;         /* filet fin */
+  --line-ink: #14130e;     /* filet fort */
+  --accent: #2b2be6;       /* bleu : UNIQUEMENT l'indicateur live */
+  /* Couleurs de STATUT — réservées au verdict et aux issues, nulle part ailleurs */
+  --ok: #197a3a;
+  --warn: #a05e00;
+  --err: #cf2020;
+  --rec: #cf2020;
+
+  --mono: "Space Mono", "SFMono-Regular", ui-monospace, "Menlo", monospace;
+
+  font-family: var(--mono);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font-family: inherit; cursor: pointer; }
+::selection { background: var(--accent); color: #fff; }
