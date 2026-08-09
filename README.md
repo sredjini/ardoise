@@ -95,6 +95,20 @@ UI React : la chaîne d'agents, la confiance, la traçabilité, le verdict
 | Retrieval       | `fastembed` (MiniLM multilingue 384d), cosinus en mémoire          |
 | API             | FastAPI + `slowapi` (rate limit)                                   |
 
+## Garde-fous testés
+
+Les tests backend couvrent les règles critiques qui ne doivent pas dépendre du LLM :
+
+- calcul déterministe HT / TVA / TTC ;
+- rejet propre des entrées qui ne décrivent pas une dépense ;
+- escalade humaine forcée lorsqu'un montant manque ;
+- boucle de correction déclenchée uniquement pour les erreurs corrigeables.
+
+```bash
+cd server
+uv run pytest
+```
+
 ## Lancer en local
 
 **Backend** (Python 3.13, [uv](https://docs.astral.sh/uv/))
@@ -139,7 +153,7 @@ ALLOW_ORIGINS=https://sredjini-ardoise.onrender.com
 ## Structure
 
 ```
-scribe-med/
+ardoise/
 ├── web/                  front React/TS
 │   └── src/
 │       ├── App.tsx       orchestration + chaîne visuelle + pipeline
@@ -153,7 +167,8 @@ scribe-med/
 │   │   ├── graph.py      le graphe LangGraph (aiguillage + boucle)
 │   │   └── main.py       API FastAPI + garde-fous
 │   └── data/pcg.json     référentiel de comptes (extrait du PCG)
-└── cours/                notes techniques (choix, lecture du code)
+├── render.yaml           blueprint Render API + front
+└── README.md
 ```
 
 ## Feuille de route
