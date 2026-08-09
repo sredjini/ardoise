@@ -1,67 +1,123 @@
-"""
-rag.py — Retrieval en mémoire sur le référentiel PCG.
+"""Retrieval en mémoire sur le référentiel PCG.
 
-Pourquoi RAG et pas tout mettre dans le prompt ? Pour 40 comptes on POURRAIT
-inliner. On fait du retrieval parce qu'un vrai plan de comptes fait des
-centaines/milliers de lignes (+ comptes analytiques) → ça ne tiendrait plus
-en contexte. C'est l'archi réaliste, et ça isole le "choix de compte" comme
-une étape testable.
-
-Modèle : paraphrase-multilingual-MiniLM-L12-v2 (384d) — léger, multilingue,
-bon en français. (Pas de préfixe "query:/passage:" ici : ça, c'était spécifique
-à la famille E5.)
+Deux backends sont disponibles :
+  - lexical, par défaut pour la démo Render 512 MiB ;
+  - fastembed, plus proche d'un retrieval embeddings, activable avec
+    RAG_BACKEND=fastembed quand la mémoire disponible le permet.
 """
 
 import json
+import math
+import os
+import re
+import unicodedata
+from collections import Counter
 from pathlib import Path
 
-import numpy as np
-from fastembed import TextEmbedding
-
 _DATA = Path(__file__).resolve().parent.parent / "data" / "pcg.json"
+_STOPWORDS = {
+    "a",
+    "au",
+    "aux",
+    "avec",
+    "d",
+    "de",
+    "des",
+    "du",
+    "en",
+    "et",
+    "j",
+    "l",
+    "la",
+    "le",
+    "les",
+    "pour",
+    "un",
+    "une",
+}
 
 
-class Referential:
-    """Charge le référentiel, l'encode une fois, et répond aux requêtes."""
+def _tokens(text: str) -> list[str]:
+    text = unicodedata.normalize("NFKD", text.lower())
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    return [tok for tok in re.findall(r"[a-z0-9]+", text) if tok not in _STOPWORDS]
+
+
+class LexicalReferential:
+    """Scorer lexical léger pour la démo hébergée."""
 
     def __init__(self) -> None:
+        self.entries: list[dict] = json.loads(_DATA.read_text(encoding="utf-8"))
+        self._vectors = [
+            Counter(_tokens(f"{e['compte']} {e['libelle']} {e['exemples']} {e.get('regle', '')}"))
+            for e in self.entries
+        ]
+
+    @staticmethod
+    def _cosine(a: Counter[str], b: Counter[str]) -> float:
+        dot = sum(weight * b.get(tok, 0) for tok, weight in a.items())
+        norm_a = math.sqrt(sum(weight * weight for weight in a.values()))
+        norm_b = math.sqrt(sum(weight * weight for weight in b.values()))
+        return dot / (norm_a * norm_b) if norm_a and norm_b else 0.0
+
+    def retrieve(self, query: str, k: int = 4) -> list[dict]:
+        q = Counter(_tokens(query))
+        ranked = sorted(
+            enumerate(self._vectors),
+            key=lambda item: self._cosine(q, item[1]),
+            reverse=True,
+        )[:k]
+
+        results = []
+        for i, vector in ranked:
+            entry = dict(self.entries[i])
+            entry["score"] = round(self._cosine(q, vector), 3)
+            entry["retrieval_backend"] = "lexical"
+            results.append(entry)
+        return results
+
+
+class FastEmbedReferential:
+    """Backend embeddings optionnel, gardé pour une infra avec plus de mémoire."""
+
+    def __init__(self) -> None:
+        import numpy as np
+        from fastembed import TextEmbedding
+
+        self._np = np
         self.entries: list[dict] = json.loads(_DATA.read_text(encoding="utf-8"))
         self._model = TextEmbedding(
             model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
         )
-
-        # Texte encodé par entrée : libellé + exemples (ce sur quoi on matche).
         passages = [f"{e['libelle']}. {e['exemples']}" for e in self.entries]
-        # matrice (N, 384), normalisée pour que le produit scalaire = cosinus.
         vecs = np.array(list(self._model.embed(passages)), dtype=np.float32)
         self._matrix = self._normalize(vecs)
 
-    @staticmethod
-    def _normalize(v: np.ndarray) -> np.ndarray:
-        norms = np.linalg.norm(v, axis=-1, keepdims=True)
-        return v / np.clip(norms, 1e-9, None)
+    def _normalize(self, v):
+        norms = self._np.linalg.norm(v, axis=-1, keepdims=True)
+        return v / self._np.clip(norms, 1e-9, None)
 
     def retrieve(self, query: str, k: int = 4) -> list[dict]:
-        """Renvoie les k comptes les plus proches, avec leur score de similarité."""
-        q = np.array(list(self._model.embed([query]))[0], dtype=np.float32)
+        q = self._np.array(list(self._model.embed([query]))[0], dtype=self._np.float32)
         q = self._normalize(q[None, :])[0]
-        scores = self._matrix @ q                       # cosinus (N,)
-        top = np.argsort(-scores)[:k]
-        out = []
+        scores = self._matrix @ q
+        top = self._np.argsort(-scores)[:k]
+
+        results = []
         for i in top:
             entry = dict(self.entries[int(i)])
             entry["score"] = round(float(scores[i]), 3)
-            out.append(entry)
-        return out
+            entry["retrieval_backend"] = "fastembed"
+            results.append(entry)
+        return results
 
 
-# Singleton : on encode le référentiel UNE fois au démarrage (coûteux), pas
-# à chaque requête.
-_referential: Referential | None = None
+_referential: LexicalReferential | FastEmbedReferential | None = None
 
 
-def get_referential() -> Referential:
+def get_referential() -> LexicalReferential | FastEmbedReferential:
     global _referential
     if _referential is None:
-        _referential = Referential()
+        backend = os.getenv("RAG_BACKEND", "lexical").lower()
+        _referential = FastEmbedReferential() if backend == "fastembed" else LexicalReferential()
     return _referential

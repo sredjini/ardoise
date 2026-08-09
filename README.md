@@ -92,7 +92,7 @@ UI React : la chaîne d'agents, la confiance, la traçabilité, le verdict
 | Orchestration   | **LangGraph** (graphe à état, aiguillage + boucle conditionnelle)  |
 | LLM / OCR       | Scaleway (EU) — `langchain-openai`, mistral-small (multimodal)     |
 | Structured out. | Pydantic (`with_structured_output`)                                |
-| Retrieval       | `fastembed` (MiniLM multilingue 384d), cosinus en mémoire          |
+| Retrieval       | lexical sur Render 512 MiB, `fastembed` activable hors contrainte mémoire |
 | API             | FastAPI + `slowapi` (rate limit)                                   |
 
 ## Garde-fous testés
@@ -148,7 +148,11 @@ Les URLs sont câblées par défaut :
 ```bash
 VITE_API_URL=https://sredjini-ardoise-api.onrender.com
 ALLOW_ORIGINS=https://sredjini-ardoise.onrender.com
+RAG_BACKEND=lexical
 ```
+
+`RAG_BACKEND=fastembed` active le retrieval par embeddings (`fastembed`/ONNX), mais il
+demande plus de mémoire que l'instance Render 512 MiB utilisée pour la démo.
 
 ## Structure
 

@@ -24,6 +24,8 @@ services:
         value: mistral-small-3.2-24b-instruct-2506
       - key: MAX_RETRIES
         value: "2"
+      - key: RAG_BACKEND
+        value: lexical
       - key: ALLOW_ORIGINS
         value: https://sredjini-ardoise.onrender.com
 

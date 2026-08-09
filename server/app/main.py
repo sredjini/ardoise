@@ -6,8 +6,7 @@ Protections :
   - validation d'entrée (longueur du texte, taille et type de l'image) ;
   - garde-fou métier : une entrée qui n'est pas une dépense est rejetée
     proprement (statut "rejected"), sans rien fabriquer.
-Au démarrage, on pré-charge le modèle d'embeddings pour que la 1re requête
-ne paie pas le coût de chargement.
+Au démarrage, on charge le référentiel PCG en mémoire.
 """
 
 from contextlib import asynccontextmanager
@@ -28,7 +27,7 @@ from .rag import get_referential
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Pré-chauffe : charge le modèle d'embeddings au démarrage (pas au 1er appel).
+    # Pré-chauffe légère : charge seulement le référentiel PCG en mémoire.
     get_referential()
     yield
 

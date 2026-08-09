@@ -1,8 +1,6 @@
-# Backend Ardoise — FastAPI + LangGraph + fastembed. Image auto-suffisante :
-# le modèle d'embeddings est téléchargé au build → cold-start rapide.
+# Backend Ardoise — FastAPI + LangGraph. Image auto-suffisante pour Render.
 FROM python:3.13-slim
 
-# onnxruntime (via fastembed) a besoin de libgomp1.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends libgomp1 \
  && rm -rf /var/lib/apt/lists/*
@@ -22,9 +20,6 @@ RUN uv sync --frozen --no-dev --no-install-project
 # 2) Code + données
 COPY app ./app
 COPY data ./data
-
-# 3) Pré-télécharge le modèle d'embeddings dans l'image
-RUN uv run python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
 
 ENV PORT=8000
 EXPOSE 8000
