@@ -1,0 +1,46 @@
+[
+  { "compte": "6251", "libelle": "Voyages et déplacements",
+    "exemples": "train, avion, taxi, VTC, péage, parking, location de voiture",
+    "tva_usuelle": 10, "deductible": true,
+    "regle": "Transport de voyageurs : TVA 10%. TVA non déductible sur véhicule de tourisme (location incluse) mais déductible sur transport." },
+
+  { "compte": "6256", "libelle": "Missions",
+    "exemples": "hôtel, nuitée, hébergement en déplacement professionnel",
+    "tva_usuelle": 10, "deductible": true,
+    "regle": "HÉBERGEMENT uniquement (hôtel, nuitée). Ne JAMAIS utiliser pour un repas → voir 6257." },
+
+  { "compte": "6257", "libelle": "Réceptions",
+    "exemples": "repas d'affaires, déjeuner ou dîner avec un client, restaurant, brasserie, bistrot, traiteur, réception",
+    "tva_usuelle": 10, "deductible": true,
+    "regle": "TOUT repas/restaurant à caractère professionnel (déjeuner ou dîner d'affaires). TVA 10% déductible." },
+
+  { "compte": "6064", "libelle": "Fournitures administratives",
+    "exemples": "papeterie, cartouches d'encre, stylos, classeurs, petit matériel de bureau",
+    "tva_usuelle": 20, "deductible": true, "regle": "TVA 20% déductible." },
+
+  { "compte": "6061", "libelle": "Fournitures non stockables (énergie)",
+    "exemples": "électricité, gaz, eau, carburant",
+    "tva_usuelle": 20, "deductible": true,
+    "regle": "Gazole/essence : TVA déductible à 80% pour véhicule de tourisme. Électricité/gaz : 20% déductible." },
+
+  { "compte": "6261", "libelle": "Frais postaux et de télécommunications",
+    "exemples": "affranchissement, timbres, téléphone, abonnement internet, forfait mobile",
+    "tva_usuelle": 20, "deductible": true, "regle": "TVA 20% déductible." },
+
+  { "compte": "6227", "libelle": "Frais d'actes et de contentieux",
+    "exemples": "honoraires d'huissier, frais de greffe, actes juridiques",
+    "tva_usuelle": 20, "deductible": true, "regle": "TVA 20% déductible." },
+
+  { "compte": "6234", "libelle": "Cadeaux à la clientèle",
+    "exemples": "cadeau client, coffret, goodies offerts",
+    "tva_usuelle": 20, "deductible": false,
+    "regle": "TVA non déductible si valeur unitaire TTC dépasse le seuil légal (73 € en 2024)." },
+
+  { "compte": "6182", "libelle": "Documentation générale",
+    "exemples": "livres, revues professionnelles, abonnement presse, documentation technique",
+    "tva_usuelle": 5.5, "deductible": true, "regle": "Livres : TVA 5,5%. Presse : 2,1%." },
+
+  { "compte": "6068", "libelle": "Autres matières et fournitures",
+    "exemples": "achat divers non classable ailleurs",
+    "tva_usuelle": 20, "deductible": true, "regle": "Compte fourre-tout : à n'utiliser que si aucun compte précis ne convient." }
+]
