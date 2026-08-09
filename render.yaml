@@ -1,0 +1,41 @@
+# Render Blueprint for Ardoise: Docker FastAPI API + static Vite frontend.
+# Deploy: push `scribe-med/` to GitHub, then use New > Blueprint on Render.
+services:
+  - type: web
+    name: sredjini-ardoise-api
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    rootDir: server
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: SCW_URL
+        sync: false
+      - key: SCW_API_KEY
+        sync: false
+      - key: SCW_MODEL
+        value: mistral-small-3.2-24b-instruct-2506
+      - key: SCW_VISION_MODEL
+        value: mistral-small-3.2-24b-instruct-2506
+      - key: MAX_RETRIES
+        value: "2"
+      - key: ALLOW_ORIGINS
+        value: https://sredjini-ardoise.onrender.com
+
+  - type: web
+    name: sredjini-ardoise
+    runtime: static
+    rootDir: web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeployTrigger: commit
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://sredjini-ardoise-api.onrender.com
