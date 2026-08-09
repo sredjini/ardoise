@@ -7,6 +7,8 @@ services:
     plan: starter
     region: frankfurt
     rootDir: server
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
