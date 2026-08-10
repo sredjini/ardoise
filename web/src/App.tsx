@@ -303,6 +303,71 @@ const CHAIN_STEPS = [
   { key: "verify", n: "04", label: "Vérification" },
 ] as const;
 
+// Doc pédagogique par étape : ce que ça fait (use case) + l'extrait de code réel.
+// Clic sur un nœud de la chaîne → on affiche ce bloc.
+const STEP_DOCS: Record<string, { title: string; use: string; file: string; code: string }> = {
+  ocr: {
+    title: "OCR — lire le justificatif",
+    use: "Une photo de ticket est lue par un modèle vision (EU) qui en résume la dépense, comme une dictée. L'OCR n'est qu'une entrée de plus vers le même cycle.",
+    file: "server/app/llm.py",
+    code: `def ocr_expense(image_data_url: str) -> str:
+    msg = HumanMessage(content=[
+        {"type": "text", "text": _OCR_PROMPT},
+        {"type": "image_url", "image_url": {"url": image_data_url}},
+    ])
+    return str(_vision_llm().invoke([msg]).content).strip()`,
+  },
+  extract: {
+    title: "Extraction — comprendre la dépense",
+    use: "Un LLM transforme le texte libre en champs structurés (marchand, motif, date, montant) et DÉCLARE ce qu'il ne sait pas (champs_manquants) au lieu de deviner.",
+    file: "server/app/agents.py",
+    code: `def extract_node(state: GraphState) -> dict:
+    # structured() force le LLM à remplir le schéma Extraction
+    result: Extraction = structured(Extraction).invoke(prompt)
+    return {"extraction": result}
+# Extraction impose: est_une_depense (rejet), champs_manquants (pas d'invention)`,
+  },
+  code: {
+    title: "Codage — choisir le compte PCG (RAG + LLM)",
+    use: "On récupère par similarité (RAG) les comptes candidats du Plan Comptable ; le LLM en choisit UN parmi eux ; le taux de TVA et la déductibilité viennent du RÉFÉRENTIEL, pas du LLM → il ne peut pas les inventer.",
+    file: "server/app/agents.py",
+    code: `def code_node(state: GraphState) -> dict:
+    query = " ".join(filter(None, [ex.marchand, ex.motif])) or state.transcript
+    candidates = get_referential().retrieve(query, k=4)        # ← RAG
+    choice = structured(CodingChoice).invoke(prompt)           # ← LLM choisit LE compte
+    entry = next((c for c in candidates
+                  if c["compte"] == choice.compte), candidates[0])
+    coding = Coding(
+        compte=entry["compte"], libelle=entry["libelle"],
+        tva_taux=float(entry["tva_usuelle"]),    # ← vient du référentiel
+        deductible=bool(entry["deductible"]),
+        justification=choice.justification, confidence=choice.confidence)
+    return {"coding": coding, "retrieved": candidates}`,
+  },
+  draft: {
+    title: "Rédaction — l'écriture comptable (déterministe)",
+    use: "Les montants HT / TVA / TTC sont CALCULÉS en Python, jamais générés par le LLM. On ne laisse pas une IA faire l'arithmétique sur de l'argent.",
+    file: "server/app/agents.py",
+    code: `def draft_node(state: GraphState) -> dict:
+    ttc, taux = ex.montant_ttc or 0.0, co.tva_taux or 0.0
+    ht = round(ttc / (1 + taux / 100), 2)   # ← calcul, pas de LLM
+    tva = round(ttc - ht, 2)
+    return {"ecriture": Ecriture(compte_charge=co.compte,
+            montant_ht=ht, montant_tva=tva, montant_ttc=round(ttc, 2), ...)}`,
+  },
+  verify: {
+    title: "Vérification — agent de contrôle indépendant",
+    use: "Un LLM SÉPARÉ contrôle l'ancrage et la cohérence. Il peut renvoyer corriger (la boucle) ; si un champ essentiel manque (montant), on escalade à l'humain — jamais d'invention.",
+    file: "server/app/agents.py",
+    code: `def verify_node(state: GraphState) -> dict:
+    result: Verification = structured(Verification).invoke(prompt)
+    if ex.montant_ttc is None:        # ← garde-fou déterministe
+        result.needs_human = True
+        result.ok = False
+    return {"verification": result}`,
+  },
+};
+
 function Chain({
   source,
   loading,
@@ -326,6 +391,8 @@ function Chain({
       : "fail";
   };
 
+  const [selected, setSelected] = useState<string | null>(null);
+
   const inLabel = source ? source.toUpperCase() : "ENTRÉE";
   const inIcon = source === "voix" ? "🎙" : source === "photo" ? "📷" : "⌨";
 
@@ -334,6 +401,8 @@ function Chain({
     source === "photo"
       ? [{ key: "ocr", n: "··", label: "OCR" } as const, ...CHAIN_STEPS]
       : CHAIN_STEPS;
+
+  const doc = selected ? STEP_DOCS[selected] : null;
 
   return (
     <div className={`chain ${loading ? "is-run" : ""}`}>
@@ -347,11 +416,18 @@ function Chain({
             <span className="conn" style={{ animationDelay: `${i * 0.15}s` }}>
               ——▸
             </span>
-            <div className={`node ${nodeState(s.key)}`} style={{ animationDelay: `${i * 0.2}s` }}>
+            <button
+              type="button"
+              className={`node ${nodeState(s.key)} ${selected === s.key ? "sel" : ""}`}
+              style={{ animationDelay: `${i * 0.2}s` }}
+              onClick={() => setSelected(selected === s.key ? null : s.key)}
+              aria-expanded={selected === s.key}
+              title="Voir le code de cette étape"
+            >
               <span className="node-n">{s.n}</span>
               <span className="node-l">{s.label}</span>
               <span className="node-s" />
-            </div>
+            </button>
           </div>
         ))}
       </div>
@@ -364,6 +440,25 @@ function Chain({
           {result && result.retries > 0 ? ` · ${result.retries} exécutée(s)` : " · max 2"}
         </span>
       </div>
+
+      {/* Pédagogie : clic sur une étape → ce qu'elle fait + le code réel */}
+      {doc ? (
+        <div className="step-doc">
+          <div className="step-doc__head">
+            <strong>{doc.title}</strong>
+            <button type="button" className="step-doc__close" onClick={() => setSelected(null)}>
+              ✕
+            </button>
+          </div>
+          <p className="step-doc__use">{doc.use}</p>
+          <div className="step-doc__file">{doc.file}</div>
+          <pre className="step-doc__code">
+            <code>{doc.code}</code>
+          </pre>
+        </div>
+      ) : (
+        <div className="chain-hint">▸ clique une étape pour voir ce qu'elle fait + le code</div>
+      )}
     </div>
   );
 }

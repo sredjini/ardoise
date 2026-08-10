@@ -163,6 +163,20 @@
 
 .running { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); padding: 8px 0; animation: connpulse .9s steps(1) infinite; }
 
+/* Étapes cliquables → doc pédagogique (use case + code réel) */
+button.node { font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.node.sel { box-shadow: inset 0 0 0 2px var(--accent); }
+.chain-hint { margin-top: 12px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); }
+.step-doc { margin-top: 14px; border: 1px solid var(--line-ink); }
+.step-doc__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.step-doc__head strong { font-size: 12.5px; text-transform: uppercase; letter-spacing: .5px; }
+.step-doc__close { border: none; background: none; cursor: pointer; font-size: 14px; color: var(--ink-soft); }
+.step-doc__close:hover { color: var(--rec); }
+.step-doc__use { margin: 0; padding: 12px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.step-doc__file { padding: 0 12px 8px; font-size: 10.5px; color: var(--accent); }
+.step-doc__code { margin: 0; padding: 12px; border-top: 1px solid var(--line); background: var(--paper); overflow-x: auto; font-size: 11.5px; line-height: 1.55; }
+.step-doc__code code { white-space: pre; }
+
 /* --- Pipeline --- */
 .pipeline { display: flex; flex-direction: column; }
 .verdict {
