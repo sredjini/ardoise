@@ -140,8 +140,12 @@ export default function App() {
     }
   };
 
+  // Onboarding : tant qu'on n'a rien lancé, on n'affiche QUE l'entrée + le guide
+  // (pas la chaîne d'agents, trop chargée à l'arrivée). Dès « Traiter » → tout apparaît.
+  const started = loading || result !== null;
+
   return (
-    <div className="app">
+    <div className={`app ${started ? "" : "is-onboard"}`}>
       <header className="topbar">
         <div className="brand">
           <span className="sq" />
@@ -159,7 +163,7 @@ export default function App() {
         [ DICTEZ UNE DÉPENSE — 4 AGENTS L'EXTRAIENT · LA CODENT · LA RÉDIGENT · LA VÉRIFIENT ]
       </div>
 
-      <main className="layout">
+      <main className={`layout ${started ? "" : "onboard"}`}>
         {/* Colonne gauche : le CHOIX de la source (voix / photo / texte) */}
         <aside className="panel side">
           <div className="modes-label">ENTRÉE — 3 sources, 1 seul cycle</div>
@@ -245,10 +249,15 @@ export default function App() {
 
         {/* Colonne centrale : la chaîne d'agents + le détail du pipeline */}
         <section className="panel main" aria-live="polite">
-          <Chain source={source} loading={loading} result={result} />
-          {!result && !loading && <Empty />}
-          {loading && <div className="running">▚ traitement en cours…</div>}
-          {result && <Pipeline r={result} />}
+          {started ? (
+            <>
+              <Chain source={source} loading={loading} result={result} />
+              {loading && <div className="running">▚ traitement en cours…</div>}
+              {result && <Pipeline r={result} />}
+            </>
+          ) : (
+            <Onboard />
+          )}
         </section>
       </main>
 
@@ -286,11 +295,18 @@ function Clock() {
   );
 }
 
-function Empty() {
+function Onboard() {
   return (
-    <div className="empty">
-      <p>Le résultat du pipeline s'affichera ici.</p>
-      <p className="muted">Dictez ou choisissez un exemple, puis « Traiter ».</p>
+    <div className="onboard-guide">
+      <span className="onboard-step">01 · Entrée</span>
+      <h2>Écris, dicte ou photographie une dépense.</h2>
+      <p className="onboard-ex">
+        par ex. <em>« taxi gare-hôtel 34 €, déplacement client Lyon »</em> — ou une photo de ticket.
+      </p>
+      <p className="onboard-out">
+        Ardoise la transforme en <strong>écriture comptable structurée, codée (Plan Comptable)
+        et vérifiée</strong>. La chaîne d'agents s'affiche dès que tu lances «&nbsp;Traiter&nbsp;».
+      </p>
     </div>
   );
 }

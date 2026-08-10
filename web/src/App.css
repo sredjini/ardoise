@@ -30,6 +30,18 @@
 .side { padding: 22px 22px 22px 0; position: sticky; top: 18px; border-right: 1px solid var(--line-ink); }
 .main { padding: 22px 0 22px 24px; min-height: 620px; }
 
+/* Onboarding : au départ, colonne unique centrée — guide AU-DESSUS de l'entrée,
+   pas de chaîne d'agents (moins chargé). */
+.layout.onboard { grid-template-columns: 1fr; max-width: 660px; margin: 0 auto; }
+.layout.onboard .side { border-right: none; position: static; padding: 20px 0 0; order: 2; }
+.layout.onboard .main { min-height: 0; padding: 0; order: 1; }
+.onboard-guide { border-bottom: 1px dashed var(--line); padding-bottom: 20px; }
+.onboard-step { font-size: 11px; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; }
+.onboard-guide h2 { margin: 10px 0 12px; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -.3px; }
+.onboard-ex { font-size: 14px; color: var(--ink); margin: 0 0 12px; }
+.onboard-ex em { color: var(--accent); font-style: normal; }
+.onboard-out { font-size: 13.5px; line-height: 1.65; color: var(--ink-2); margin: 0; }
+
 /* --- Entrée voix --- */
 /* Choix de la source d'entrée */
 .modes-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-soft); margin-bottom: 9px; }
