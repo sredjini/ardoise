@@ -393,6 +393,12 @@ function Chain({
 
   const [selected, setSelected] = useState<string | null>(null);
 
+  // Dès qu'un résultat arrive, on ouvre AUTOMATIQUEMENT le panneau (étape Codage)
+  // → les gens comprennent que les étapes sont cliquables et explorables.
+  useEffect(() => {
+    if (result && !loading) setSelected("code");
+  }, [result, loading]);
+
   const inLabel = source ? source.toUpperCase() : "ENTRÉE";
   const inIcon = source === "voix" ? "🎙" : source === "photo" ? "📷" : "⌨";
 
