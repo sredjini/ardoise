@@ -298,15 +298,21 @@ function Clock() {
 function Onboard() {
   return (
     <div className="onboard-guide">
-      <span className="onboard-step">01 · Entrée</span>
-      <h2>Écris, dicte ou photographie une dépense.</h2>
+      <span className="onboard-step">Bienvenue</span>
+      <h2>Transforme une dépense en écriture comptable, en quelques secondes.</h2>
       <p className="onboard-ex">
-        par ex. <em>« taxi gare-hôtel 34 €, déplacement client Lyon »</em> — ou une photo de ticket.
+        Dis, photographie ou tape ta dépense — par ex. <em>« taxi, 34 € »</em>. L'IA s'occupe du reste.
       </p>
-      <p className="onboard-out">
-        Ardoise la transforme en <strong>écriture comptable structurée, codée (Plan Comptable)
-        et vérifiée</strong>. La chaîne d'agents s'affiche dès que tu lances «&nbsp;Traiter&nbsp;».
-      </p>
+      <ol className="onboard-steps">
+        <li>Tu décris ta dépense (voix, photo ou texte).</li>
+        <li>
+          L'IA l'extrait, trouve le bon <strong>compte comptable</strong> et calcule la <strong>TVA</strong>.
+        </li>
+        <li>
+          Un agent <strong>vérifie</strong> tout — toi, tu <strong>valides</strong>.
+        </li>
+      </ol>
+      <p className="onboard-out">Choisis une source ci-dessous, puis «&nbsp;Traiter&nbsp;».</p>
     </div>
   );
 }
