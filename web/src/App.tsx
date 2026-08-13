@@ -296,7 +296,7 @@ function Onboard() {
 // --- La chaîne d'agents : rend le workflow lisible d'un coup d'œil ----------
 const CHAIN_STEPS = [
   { key: "extract", n: "01", label: "Extraction" },
-  { key: "code", n: "02", label: "Codage" },
+  { key: "code", n: "02", label: "Imputation" },
   { key: "draft", n: "03", label: "Rédaction" },
   { key: "verify", n: "04", label: "Vérification" },
 ] as const;
@@ -326,7 +326,7 @@ const STEP_DOCS: Record<string, { title: string; use: string; file: string; code
 # Extraction impose: est_une_depense (rejet), champs_manquants (pas d'invention)`,
   },
   code: {
-    title: "Codage : choisir le compte PCG (RAG + LLM)",
+    title: "Imputation : choisir le compte PCG (RAG + LLM)",
     use: "On récupère par similarité (RAG) les comptes candidats du Plan Comptable ; le LLM en choisit UN parmi eux ; le taux de TVA et la déductibilité viennent du RÉFÉRENTIEL, pas du LLM → il ne peut pas les inventer.",
     file: "server/app/agents.py",
     code: `def code_node(state: GraphState) -> dict:
