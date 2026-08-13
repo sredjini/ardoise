@@ -277,12 +277,18 @@ export default function App() {
 function Onboard() {
   return (
     <div className="onboard-guide">
-      <h2>Une dépense en écriture comptable, en quelques secondes.</h2>
+      <h2>
+        Dictez une dépense.
+        <br />
+        Obtenez l'écriture comptable.
+      </h2>
       <p className="onboard-ex">
-        Dis, photographie ou tape ta dépense — <em>« taxi, 34 € »</em> — un pipeline d'agents
-        l'extrait, la code (compte, TVA) et la <strong>vérifie</strong> avant validation.
+        Voix, photo ou texte : des agents l'extraient, trouvent le bon <strong>compte comptable</strong>
+        {" "}et la vérifient. Vous validez.
       </p>
-      <p className="onboard-out">Choisis une source ci-dessous, puis «&nbsp;Traiter&nbsp;».</p>
+      <p className="onboard-out">
+        Essayez : dites <em>«&nbsp;taxi, 34&nbsp;€&nbsp;»</em>.
+      </p>
     </div>
   );
 }

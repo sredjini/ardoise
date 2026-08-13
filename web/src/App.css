@@ -33,7 +33,7 @@
 .onboard-guide { border-bottom: 1px dashed var(--line); padding-bottom: 20px; }
 .onboard-guide h2 { margin: 0 0 14px; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -.3px; }
 .onboard-ex { font-size: 14px; line-height: 1.6; color: var(--ink); margin: 0; }
-.onboard-ex em { color: var(--accent); font-style: normal; }
+.onboard-guide em { color: var(--accent); font-style: normal; }
 .onboard-out { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 16px 0 0; }
 
 /* --- Entrée voix --- */
