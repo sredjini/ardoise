@@ -31,18 +31,10 @@
 .layout.onboard .side { border-right: none; position: static; padding: 20px 0 0; order: 2; }
 .layout.onboard .main { min-height: 0; padding: 0; order: 1; }
 .onboard-guide { border-bottom: 1px dashed var(--line); padding-bottom: 20px; }
-.onboard-step { font-size: 11px; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; }
-.onboard-guide h2 { margin: 10px 0 12px; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -.3px; }
-.onboard-ex { font-size: 14px; color: var(--ink); margin: 0 0 12px; }
+.onboard-guide h2 { margin: 0 0 14px; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -.3px; }
+.onboard-ex { font-size: 14px; line-height: 1.6; color: var(--ink); margin: 0; }
 .onboard-ex em { color: var(--accent); font-style: normal; }
 .onboard-out { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 16px 0 0; }
-.onboard-steps { list-style: none; counter-reset: s; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
-.onboard-steps li { counter-increment: s; position: relative; padding-left: 34px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
-.onboard-steps li::before {
-  content: counter(s); position: absolute; left: 0; top: -1px;
-  width: 22px; height: 22px; border: 1px solid var(--accent); color: var(--accent);
-  font-size: 11px; font-weight: 700; display: grid; place-items: center;
-}
 
 /* --- Entrée voix --- */
 /* Choix de la source d'entrée */
@@ -192,27 +184,37 @@ button.node { font: inherit; color: inherit; text-align: left; cursor: pointer; 
 .step-doc__code { margin: 0; padding: 12px; border-top: 1px solid var(--line); background: var(--paper); overflow-x: auto; font-size: 11.5px; line-height: 1.55; }
 .step-doc__code code { white-space: pre; }
 
-/* --- Pipeline --- */
-.pipeline { display: flex; flex-direction: column; }
-.verdict {
-  display: flex; align-items: center; gap: 11px; padding: 15px 0; margin-bottom: 2px;
-  border-bottom: 1px solid var(--line-ink); text-transform: uppercase; letter-spacing: 1px;
+/* Fiche d'étape : données produites, puis « pourquoi », puis code à la demande */
+.step-data { padding: 14px 12px 2px; }
+.step-data .grid2 { border-top: none; }
+.step-note { margin: 0; padding: 0 2px 6px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.code-toggle {
+  width: 100%; text-align: left; border: none; border-top: 1px solid var(--line);
+  background: transparent; cursor: pointer; padding: 11px 12px; font-family: var(--mono);
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--accent);
+  display: flex; align-items: center; gap: 10px;
 }
-.verdict::before { content: ""; width: 11px; height: 11px; }
-.verdict strong { font-size: 13px; font-weight: 700; }
-.verdict.ok { color: var(--ok); } .verdict.ok::before { background: var(--ok); }
-.verdict.warn { color: var(--warn); } .verdict.warn::before { background: var(--warn); }
-.verdict.fail { color: var(--err); } .verdict.fail::before { background: var(--err); }
-.verdict .retries { margin-left: auto; font-size: 10.5px; color: var(--ink-soft); }
+.code-toggle:hover { color: var(--ink); }
+.code-toggle .code-file { margin-left: auto; color: var(--ink-soft); text-transform: none; letter-spacing: 0; }
 
-.card { border-bottom: 1px solid var(--line); padding: 20px 0; }
-.card:last-child { border-bottom: none; }
-.card-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 15px; }
-.card-n { font-size: 11px; font-weight: 700; color: var(--ink); }
-.card-head > div { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; flex: 1; }
-.card-head h3 { margin: 0; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-.card-sous { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); }
+/* --- Le livrable (outcome) : verdict + écriture finale, en tête de résultat --- */
+.result { display: flex; flex-direction: column; }
+.outcome { border: 1px solid var(--line-ink); padding: 15px 16px; margin-bottom: 20px; }
+.outcome-verdict { display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; font-weight: 700; }
+.outcome-verdict .oc-dot { width: 11px; height: 11px; flex-shrink: 0; }
+.outcome-verdict .retries { margin-left: auto; font-size: 10.5px; font-weight: 400; letter-spacing: .5px; color: var(--ink-soft); }
+.outcome.ok { color: var(--ok); } .outcome.ok .oc-dot { background: var(--ok); }
+.outcome.warn { color: var(--warn); } .outcome.warn .oc-dot { background: var(--warn); }
+.outcome.fail { color: var(--err); } .outcome.fail .oc-dot { background: var(--err); }
+.outcome-entry { display: flex; align-items: center; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink); flex-wrap: wrap; }
+.oe-account { display: flex; align-items: baseline; gap: 11px; }
+.oe-num { font-size: 26px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+.oe-lib { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-2); }
+.oe-amounts { display: flex; gap: 18px; margin-left: auto; }
+.oe-amounts span { display: flex; flex-direction: column; gap: 3px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.oe-amounts em { font-size: 9px; font-weight: 400; font-style: normal; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-soft); }
 
+/* --- Détail d'étape : contenu par type --- */
 /* Extraction : grille de champs */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
 .field { display: flex; flex-direction: column; gap: 4px; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--line); }
@@ -270,5 +272,6 @@ button.node { font: inherit; color: inherit; text-align: left; cursor: pointer; 
   .layout { grid-template-columns: 1fr; }
   .side { position: static; border-right: none; border-bottom: 1px solid var(--line-ink); padding: 0 0 22px; }
   .main { padding: 22px 0; }
-  .card-sous { display: none; }
+  .outcome-entry { gap: 12px; }
+  .oe-amounts { margin-left: 0; gap: 14px; }
 }

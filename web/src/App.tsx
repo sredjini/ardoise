@@ -243,14 +243,10 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Colonne centrale : la chaîne d'agents + le détail du pipeline */}
+        {/* Colonne centrale : le livrable, puis le pipeline interactif */}
         <section className="panel main" aria-live="polite">
           {started ? (
-            <>
-              <Chain source={source} loading={loading} result={result} />
-              {loading && <div className="running">▚ traitement en cours…</div>}
-              {result && <Pipeline r={result} />}
-            </>
+            <Result source={source} loading={loading} result={result} />
           ) : (
             <Onboard />
           )}
@@ -281,20 +277,11 @@ export default function App() {
 function Onboard() {
   return (
     <div className="onboard-guide">
-      <span className="onboard-step">Bienvenue</span>
-      <h2>Transforme une dépense en écriture comptable, en quelques secondes.</h2>
+      <h2>Une dépense en écriture comptable, en quelques secondes.</h2>
       <p className="onboard-ex">
-        Dis, photographie ou tape ta dépense : par ex. <em>« taxi, 34 € »</em>. L'IA s'occupe du reste.
+        Dis, photographie ou tape ta dépense — <em>« taxi, 34 € »</em> — un pipeline d'agents
+        l'extrait, la code (compte, TVA) et la <strong>vérifie</strong> avant validation.
       </p>
-      <ol className="onboard-steps">
-        <li>Tu décris ta dépense (voix, photo ou texte).</li>
-        <li>
-          L'IA l'extrait, trouve le bon <strong>compte comptable</strong> et calcule la <strong>TVA</strong>.
-        </li>
-        <li>
-          Un agent <strong>vérifie</strong> tout : toi, tu <strong>valides</strong>.
-        </li>
-      </ol>
       <p className="onboard-out">Choisis une source ci-dessous, puis «&nbsp;Traiter&nbsp;».</p>
     </div>
   );
@@ -373,7 +360,11 @@ const STEP_DOCS: Record<string, { title: string; use: string; file: string; code
   },
 };
 
-function Chain({
+// Après traitement, on montre EN PREMIER l'écriture produite + le verdict (le
+// livrable), puis la chaîne d'agents comme une simple navigation. Cliquer une
+// étape ouvre UNE fiche : ce que l'agent a produit + son code réel à la demande.
+// Fini le double affichage (diagramme + 4 cartes) qui noyait l'utilisateur.
+function Result({
   source,
   loading,
   result,
@@ -398,10 +389,10 @@ function Chain({
 
   const [selected, setSelected] = useState<string | null>(null);
 
-  // Dès qu'un résultat arrive, on ouvre AUTOMATIQUEMENT le panneau (étape Codage)
-  // → les gens comprennent que les étapes sont cliquables et explorables.
+  // Sur fin de traitement, on ouvre UNE fiche (l'indice que les étapes sont
+  // cliquables) — le codage RAG par défaut, ou l'extraction si rien n'a été codé.
   useEffect(() => {
-    if (result && !loading) setSelected("code");
+    if (result && !loading) setSelected(result.coding ? "code" : "extract");
   }, [result, loading]);
 
   const inLabel = source ? source.toUpperCase() : "ENTRÉE";
@@ -413,73 +404,66 @@ function Chain({
       ? [{ key: "ocr", n: "··", label: "OCR" } as const, ...CHAIN_STEPS]
       : CHAIN_STEPS;
 
-  const doc = selected ? STEP_DOCS[selected] : null;
-
   return (
-    <div className={`chain ${loading ? "is-run" : ""}`}>
-      <div className="chain-row">
-        <div className={`node in ${source ? "done" : "idle"}`}>
-          <span className="node-ic">{inIcon}</span>
-          <span className="node-l">{inLabel}</span>
-        </div>
-        {steps.map((s, i) => (
-          <div className="node-group" key={s.key}>
-            <span className="conn" style={{ animationDelay: `${i * 0.15}s` }}>
-              ::▸
-            </span>
-            <button
-              type="button"
-              className={`node ${nodeState(s.key)} ${selected === s.key ? "sel" : ""}`}
-              style={{ animationDelay: `${i * 0.2}s` }}
-              onClick={() => setSelected(selected === s.key ? null : s.key)}
-              aria-expanded={selected === s.key}
-              title="Voir le code de cette étape"
-            >
-              <span className="node-n">{s.n}</span>
-              <span className="node-l">{s.label}</span>
-              <span className="node-s" />
-            </button>
+    <div className="result">
+      {/* 1. LE LIVRABLE — écriture + verdict, tout de suite */}
+      {result && <Outcome r={result} />}
+
+      {/* 2. LE PIPELINE — stepper interactif (la navigation) */}
+      <div className={`chain ${loading ? "is-run" : ""}`}>
+        <div className="chain-row">
+          <div className={`node in ${source ? "done" : "idle"}`}>
+            <span className="node-ic">{inIcon}</span>
+            <span className="node-l">{inLabel}</span>
           </div>
+          {steps.map((s, i) => (
+            <div className="node-group" key={s.key}>
+              <span className="conn" style={{ animationDelay: `${i * 0.15}s` }}>
+                ::▸
+              </span>
+              <button
+                type="button"
+                className={`node ${nodeState(s.key)} ${selected === s.key ? "sel" : ""}`}
+                style={{ animationDelay: `${i * 0.2}s` }}
+                onClick={() => setSelected(selected === s.key ? null : s.key)}
+                aria-expanded={selected === s.key}
+                title="Voir ce que fait cette étape"
+              >
+                <span className="node-n">{s.n}</span>
+                <span className="node-l">{s.label}</span>
+                <span className="node-s" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* La boucle de retry, dessinée sous la chaîne */}
+        <div className="chain-loop">
+          <span className="loop-arc" />
+          <span className="loop-lbl">
+            ↺ boucle de vérification : renvoi en correction si incohérent
+            {result && result.retries > 0 ? ` · ${result.retries} exécutée(s)` : " · max 2"}
+          </span>
+        </div>
+      </div>
+
+      {loading && <div className="running">▚ traitement en cours…</div>}
+
+      {/* 3. UNE fiche d'étape à la fois — données produites + code à la demande */}
+      {result &&
+        (selected ? (
+          <StepDetail step={selected} r={result} onClose={() => setSelected(null)} />
+        ) : (
+          <div className="chain-hint">▸ clique une étape pour voir ce qu'elle produit + le code</div>
         ))}
-      </div>
-
-      {/* La boucle de retry, dessinée sous la chaîne */}
-      <div className="chain-loop">
-        <span className="loop-arc" />
-        <span className="loop-lbl">
-          ↺ boucle de vérification : renvoi en correction si incohérent
-          {result && result.retries > 0 ? ` · ${result.retries} exécutée(s)` : " · max 2"}
-        </span>
-      </div>
-
-      {/* Pédagogie : clic sur une étape → ce qu'elle fait + le code réel */}
-      {doc ? (
-        <div className="step-doc">
-          <div className="step-doc__head">
-            <strong>{doc.title}</strong>
-            <button type="button" className="step-doc__close" onClick={() => setSelected(null)}>
-              ✕
-            </button>
-          </div>
-          <p className="step-doc__use">{doc.use}</p>
-          <div className="step-doc__file">{doc.file}</div>
-          <pre className="step-doc__code">
-            <code>{doc.code}</code>
-          </pre>
-        </div>
-      ) : (
-        <div className="chain-hint">▸ clique une étape pour voir ce qu'elle fait + le code</div>
-      )}
     </div>
   );
 }
 
-// --- Affichage du pipeline complet -----------------------------------------
-function Pipeline({ r }: { r: PipelineResult }) {
-  const v = r.verification;
-  const statusClass =
-    r.status === "validated" ? "ok" : r.status === "needs_human" ? "warn" : "fail";
-  const statusLabel =
+// Le livrable : verdict + écriture comptable finale (ce que l'utilisateur obtient).
+function Outcome({ r }: { r: PipelineResult }) {
+  const cls = r.status === "validated" ? "ok" : r.status === "needs_human" ? "warn" : "fail";
+  const label =
     r.status === "validated"
       ? "Écriture validée"
       : r.status === "needs_human"
@@ -487,142 +471,195 @@ function Pipeline({ r }: { r: PipelineResult }) {
       : r.status === "rejected"
       ? "Entrée non reconnue comme une dépense"
       : "Échec";
-
+  const e = r.ecriture;
   return (
-    <div className="pipeline">
-      <div className={`verdict ${statusClass}`}>
-        <strong>{statusLabel}</strong>
+    <div className={`outcome ${cls}`}>
+      <div className="outcome-verdict">
+        <span className="oc-dot" />
+        <strong>{label}</strong>
         {r.retries > 0 && <span className="retries">{r.retries} correction(s)</span>}
       </div>
-
-      {/* 1. Extraction */}
-      {r.extraction && (
-        <Card n="01" titre="Extraction" sous="ce que l'agent a compris de la dictée">
-          <div className="grid2">
-            <Field k="Marchand" val={r.extraction.marchand} />
-            <Field k="Motif" val={r.extraction.motif} />
-            <Field k="Date" val={r.extraction.date} />
-            <Field
-              k="Montant TTC"
-              val={r.extraction.montant_ttc != null ? `${r.extraction.montant_ttc} €` : null}
-            />
+      {e && r.coding && (
+        <div className="outcome-entry">
+          <div className="oe-account">
+            <span className="oe-num">{r.coding.compte}</span>
+            <span className="oe-lib">{r.coding.libelle}</span>
           </div>
-          {r.extraction.champs_manquants.length > 0 && (
-            <div className="chips warn-chips">
-              <span>Manquant :</span>
-              {r.extraction.champs_manquants.map((c) => (
-                <span key={c} className="chip">
-                  {c}
-                </span>
-              ))}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* 2. Codage + traçabilité RAG */}
-      {r.coding && (
-        <Card n="02" titre="Codage" sous="compte PCG choisi par RAG sur le référentiel">
-          <div className="coding-head">
-            <div className="compte">{r.coding.compte}</div>
-            <div className="compte-lib">
-              <strong>{r.coding.libelle}</strong>
-              <div className="tva-line">
-                TVA {r.coding.tva_taux}% ·{" "}
-                {r.coding.deductible ? "déductible" : "non déductible"}
-              </div>
-            </div>
-            <Confidence value={r.coding.confidence} />
+          <div className="oe-amounts">
+            <span>
+              <em>HT</em>
+              {e.montant_ht.toFixed(2)} €
+            </span>
+            <span>
+              <em>TVA</em>
+              {e.montant_tva.toFixed(2)} €
+            </span>
+            <span className="oe-ttc">
+              <em>TTC</em>
+              {e.montant_ttc.toFixed(2)} €
+            </span>
           </div>
-          <p className="justif">{r.coding.justification}</p>
-
-          {r.retrieved.length > 0 && (
-            <details className="trace">
-              <summary>Traçabilité : {r.retrieved.length} candidats récupérés</summary>
-              <ul>
-                {r.retrieved.map((c) => (
-                  <li key={c.compte} className={c.compte === r.coding?.compte ? "chosen" : ""}>
-                    <span className="c-num">{c.compte}</span>
-                    <span className="c-lib">{c.libelle}</span>
-                    <span className="c-score">{c.score}</span>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </Card>
-      )}
-
-      {/* 3. Écriture comptable */}
-      {r.ecriture && (
-        <Card n="03" titre="Écriture" sous="montants calculés (déterministe, pas de LLM)">
-          <table className="ecriture">
-            <tbody>
-              <tr>
-                <td>{r.ecriture.compte_charge} · charge (HT)</td>
-                <td className="num">{r.ecriture.montant_ht.toFixed(2)} €</td>
-              </tr>
-              <tr>
-                <td>{r.ecriture.compte_tva} · TVA déductible</td>
-                <td className="num">{r.ecriture.montant_tva.toFixed(2)} €</td>
-              </tr>
-              <tr className="total">
-                <td>TTC</td>
-                <td className="num">{r.ecriture.montant_ttc.toFixed(2)} €</td>
-              </tr>
-            </tbody>
-          </table>
-          <p className="lib-ecriture">{r.ecriture.libelle_ecriture}</p>
-        </Card>
-      )}
-
-      {/* 4. Vérification */}
-      {v && (
-        <Card n="04" titre="Vérification" sous="agent indépendant, contrôle et ancrage">
-          {v.ok && v.issues.length === 0 ? (
-            <p className="verif-ok">✓ Cohérent, montants et TVA vérifiés, ancré dans la dictée.</p>
-          ) : (
-            <ul className="issues">
-              {v.issues.map((i, idx) => (
-                <li key={idx} className={i.severite}>
-                  <strong>{i.champ}</strong> : {i.probleme}
-                </li>
-              ))}
-              {v.needs_human && <li className="human">→ Escalade à un validateur humain.</li>}
-            </ul>
-          )}
-        </Card>
+        </div>
       )}
     </div>
   );
+}
+
+// Fiche d'une étape : ce que l'agent a produit (données) + pourquoi c'est fiable
+// + le code réel, révélé à la demande (jamais un mur de code par défaut).
+function StepDetail({
+  step,
+  r,
+  onClose,
+}: {
+  step: string;
+  r: PipelineResult;
+  onClose: () => void;
+}) {
+  const doc = STEP_DOCS[step];
+  const [showCode, setShowCode] = useState(false);
+  useEffect(() => setShowCode(false), [step]); // on replie le code en changeant d'étape
+  if (!doc) return null;
+
+  return (
+    <div className="step-doc">
+      <div className="step-doc__head">
+        <strong>{doc.title}</strong>
+        <button type="button" className="step-doc__close" onClick={onClose}>
+          ✕
+        </button>
+      </div>
+
+      {/* Ce que cette étape a produit */}
+      <div className="step-data">{stepData(step, r)}</div>
+
+      {/* Pourquoi c'est fiable */}
+      <p className="step-doc__use">{doc.use}</p>
+
+      {/* Le code réel — à la demande, pas un mur par défaut */}
+      <button
+        type="button"
+        className="code-toggle"
+        onClick={() => setShowCode((s) => !s)}
+        aria-expanded={showCode}
+      >
+        {showCode ? "▾ masquer le code" : "▸ voir le code réel"}
+        <span className="code-file">{doc.file}</span>
+      </button>
+      {showCode && (
+        <pre className="step-doc__code">
+          <code>{doc.code}</code>
+        </pre>
+      )}
+    </div>
+  );
+}
+
+// Les données produites par une étape (rendu par clé, sans hooks).
+function stepData(step: string, r: PipelineResult): React.ReactNode {
+  if (step === "ocr") {
+    return (
+      <p className="step-note">
+        Le texte lu sur le justificatif alimente exactement le même cycle qu'une dictée.
+      </p>
+    );
+  }
+  if (step === "extract" && r.extraction) {
+    const ex = r.extraction;
+    return (
+      <>
+        <div className="grid2">
+          <Field k="Marchand" val={ex.marchand} />
+          <Field k="Motif" val={ex.motif} />
+          <Field k="Date" val={ex.date} />
+          <Field k="Montant TTC" val={ex.montant_ttc != null ? `${ex.montant_ttc} €` : null} />
+        </div>
+        {ex.champs_manquants.length > 0 && (
+          <div className="chips warn-chips">
+            <span>Manquant :</span>
+            {ex.champs_manquants.map((c) => (
+              <span key={c} className="chip">
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+  if (step === "code" && r.coding) {
+    return (
+      <>
+        <div className="coding-head">
+          <div className="compte">{r.coding.compte}</div>
+          <div className="compte-lib">
+            <strong>{r.coding.libelle}</strong>
+            <div className="tva-line">
+              TVA {r.coding.tva_taux}% · {r.coding.deductible ? "déductible" : "non déductible"}
+            </div>
+          </div>
+          <Confidence value={r.coding.confidence} />
+        </div>
+        <p className="justif">{r.coding.justification}</p>
+        {r.retrieved.length > 0 && (
+          <details className="trace">
+            <summary>Traçabilité : {r.retrieved.length} candidats récupérés</summary>
+            <ul>
+              {r.retrieved.map((c) => (
+                <li key={c.compte} className={c.compte === r.coding?.compte ? "chosen" : ""}>
+                  <span className="c-num">{c.compte}</span>
+                  <span className="c-lib">{c.libelle}</span>
+                  <span className="c-score">{c.score}</span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </>
+    );
+  }
+  if (step === "draft" && r.ecriture) {
+    return (
+      <>
+        <table className="ecriture">
+          <tbody>
+            <tr>
+              <td>{r.ecriture.compte_charge} · charge (HT)</td>
+              <td className="num">{r.ecriture.montant_ht.toFixed(2)} €</td>
+            </tr>
+            <tr>
+              <td>{r.ecriture.compte_tva} · TVA déductible</td>
+              <td className="num">{r.ecriture.montant_tva.toFixed(2)} €</td>
+            </tr>
+            <tr className="total">
+              <td>TTC</td>
+              <td className="num">{r.ecriture.montant_ttc.toFixed(2)} €</td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="lib-ecriture">{r.ecriture.libelle_ecriture}</p>
+      </>
+    );
+  }
+  if (step === "verify" && r.verification) {
+    const v = r.verification;
+    return v.ok && v.issues.length === 0 ? (
+      <p className="verif-ok">✓ Cohérent, montants et TVA vérifiés, ancré dans la dictée.</p>
+    ) : (
+      <ul className="issues">
+        {v.issues.map((i, idx) => (
+          <li key={idx} className={i.severite}>
+            <strong>{i.champ}</strong> : {i.probleme}
+          </li>
+        ))}
+        {v.needs_human && <li className="human">→ Escalade à un validateur humain.</li>}
+      </ul>
+    );
+  }
+  return null;
 }
 
 // --- Petits composants -----------------------------------------------------
-function Card({
-  n,
-  titre,
-  sous,
-  children,
-}: {
-  n: string;
-  titre: string;
-  sous: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="card">
-      <div className="card-head">
-        <span className="card-n">{n}</span>
-        <div>
-          <h3>{titre}</h3>
-          <span className="card-sous">{sous}</span>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 function Field({ k, val }: { k: string; val: string | null }) {
   return (
     <div className="field">
