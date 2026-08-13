@@ -94,8 +94,22 @@ UI React : la chaîne d'agents, la confiance, la traçabilité, le verdict
 | Orchestration   | **LangGraph** (graphe à état, aiguillage + boucle conditionnelle)  |
 | LLM / OCR       | Scaleway (EU) — `langchain-openai`, mistral-small (multimodal)     |
 | Structured out. | Pydantic (`with_structured_output`)                                |
-| Retrieval       | `fastembed` (MiniLM multilingue 384d), cosinus en mémoire          |
+| Retrieval       | lexical sur Render 512 MiB, `fastembed` activable hors contrainte mémoire |
 | API             | FastAPI + `slowapi` (rate limit)                                   |
+
+## Garde-fous testés
+
+Les tests backend couvrent les règles critiques qui ne doivent pas dépendre du LLM :
+
+- calcul déterministe HT / TVA / TTC ;
+- rejet propre des entrées qui ne décrivent pas une dépense ;
+- escalade humaine forcée lorsqu'un montant manque ;
+- boucle de correction déclenchée uniquement pour les erreurs corrigeables.
+
+```bash
+cd server
+uv run pytest
+```
 
 ## Lancer en local
 
@@ -136,12 +150,16 @@ Les URLs sont câblées par défaut :
 ```bash
 VITE_API_URL=https://sredjini-ardoise-api.onrender.com
 ALLOW_ORIGINS=https://sredjini-ardoise.onrender.com
+RAG_BACKEND=lexical
 ```
+
+`RAG_BACKEND=fastembed` active le retrieval par embeddings (`fastembed`/ONNX), mais il
+demande plus de mémoire que l'instance Render 512 MiB utilisée pour la démo.
 
 ## Structure
 
 ```
-scribe-med/
+ardoise/
 ├── web/                  front React/TS
 │   └── src/
 │       ├── App.tsx       orchestration + chaîne visuelle + pipeline
@@ -155,7 +173,8 @@ scribe-med/
 │   │   ├── graph.py      le graphe LangGraph (aiguillage + boucle)
 │   │   └── main.py       API FastAPI + garde-fous
 │   └── data/pcg.json     référentiel de comptes (extrait du PCG)
-└── cours/                notes techniques (choix, lecture du code)
+├── render.yaml           blueprint Render API + front
+└── README.md
 ```
 
 ## Feuille de route

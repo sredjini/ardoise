@@ -159,9 +159,6 @@ export default function App() {
           </span>
         </div>
       </header>
-      <div className="subhead">
-        [ DICTEZ UNE DÉPENSE — 4 AGENTS L'EXTRAIENT · LA CODENT · LA RÉDIGENT · LA VÉRIFIENT ]
-      </div>
 
       <main className={`layout ${started ? "" : "onboard"}`}>
         {/* Colonne gauche : le CHOIX de la source (voix / photo / texte) */}
