@@ -50,7 +50,7 @@ export default function App() {
     return () => t.stop();
   }, []);
 
-  // Fermeture de la lightbox au clavier (Échap) — accessibilité.
+  // Fermeture de la lightbox au clavier (Échap) : accessibilité.
   useEffect(() => {
     if (!zoom) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setZoom(false);
@@ -152,7 +152,6 @@ export default function App() {
           ARDOISE<span className="brand-med">/ dictée comptable agentique</span>
         </div>
         <div className="statusbar">
-          <span>PARIS(FR)&nbsp;<Clock /></span>
           <span className="live" role="status" aria-live="polite">
             <i />
             {loading ? "PROCESSING" : listening ? "REC" : "READY"}
@@ -163,7 +162,7 @@ export default function App() {
       <main className={`layout ${started ? "" : "onboard"}`}>
         {/* Colonne gauche : le CHOIX de la source (voix / photo / texte) */}
         <aside className="panel side">
-          <div className="modes-label">ENTRÉE — 3 sources, 1 seul cycle</div>
+          <div className="modes-label">ENTRÉE : 3 sources, 1 seul cycle</div>
           <div className="modes">
             <button
               className={`record ${listening ? "on" : ""}`}
@@ -192,9 +191,9 @@ export default function App() {
               </button>
               <div className="pp-meta">
                 <span className={`pp-ok ${transcript && !loading ? "" : "muted"}`}>
-                  {loading ? "OCR…" : transcript ? "✓ extrait" : "—"}
+                  {loading ? "OCR…" : transcript ? "✓ extrait" : "-"}
                 </span>
-                <span className="pp-v2">v1 · un justificatif type — multi-formats en v2</span>
+                <span className="pp-v2">v1 · un justificatif type : multi-formats en v2</span>
               </div>
             </div>
           )}
@@ -278,19 +277,6 @@ export default function App() {
 }
 
 // Horloge live (signature 2xA : le fuseau/heure en barre de statut).
-function Clock() {
-  const [t, setT] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setT(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const p = (n: number) => String(n).padStart(2, "0");
-  return (
-    <>
-      {p(t.getHours())}:{p(t.getMinutes())}:{p(t.getSeconds())}
-    </>
-  );
-}
 
 function Onboard() {
   return (
@@ -298,7 +284,7 @@ function Onboard() {
       <span className="onboard-step">Bienvenue</span>
       <h2>Transforme une dépense en écriture comptable, en quelques secondes.</h2>
       <p className="onboard-ex">
-        Dis, photographie ou tape ta dépense — par ex. <em>« taxi, 34 € »</em>. L'IA s'occupe du reste.
+        Dis, photographie ou tape ta dépense : par ex. <em>« taxi, 34 € »</em>. L'IA s'occupe du reste.
       </p>
       <ol className="onboard-steps">
         <li>Tu décris ta dépense (voix, photo ou texte).</li>
@@ -306,7 +292,7 @@ function Onboard() {
           L'IA l'extrait, trouve le bon <strong>compte comptable</strong> et calcule la <strong>TVA</strong>.
         </li>
         <li>
-          Un agent <strong>vérifie</strong> tout — toi, tu <strong>valides</strong>.
+          Un agent <strong>vérifie</strong> tout : toi, tu <strong>valides</strong>.
         </li>
       </ol>
       <p className="onboard-out">Choisis une source ci-dessous, puis «&nbsp;Traiter&nbsp;».</p>
@@ -326,7 +312,7 @@ const CHAIN_STEPS = [
 // Clic sur un nœud de la chaîne → on affiche ce bloc.
 const STEP_DOCS: Record<string, { title: string; use: string; file: string; code: string }> = {
   ocr: {
-    title: "OCR — lire le justificatif",
+    title: "OCR : lire le justificatif",
     use: "Une photo de ticket est lue par un modèle vision (EU) qui en résume la dépense, comme une dictée. L'OCR n'est qu'une entrée de plus vers le même cycle.",
     file: "server/app/llm.py",
     code: `def ocr_expense(image_data_url: str) -> str:
@@ -337,7 +323,7 @@ const STEP_DOCS: Record<string, { title: string; use: string; file: string; code
     return str(_vision_llm().invoke([msg]).content).strip()`,
   },
   extract: {
-    title: "Extraction — comprendre la dépense",
+    title: "Extraction : comprendre la dépense",
     use: "Un LLM transforme le texte libre en champs structurés (marchand, motif, date, montant) et DÉCLARE ce qu'il ne sait pas (champs_manquants) au lieu de deviner.",
     file: "server/app/agents.py",
     code: `def extract_node(state: GraphState) -> dict:
@@ -347,7 +333,7 @@ const STEP_DOCS: Record<string, { title: string; use: string; file: string; code
 # Extraction impose: est_une_depense (rejet), champs_manquants (pas d'invention)`,
   },
   code: {
-    title: "Codage — choisir le compte PCG (RAG + LLM)",
+    title: "Codage : choisir le compte PCG (RAG + LLM)",
     use: "On récupère par similarité (RAG) les comptes candidats du Plan Comptable ; le LLM en choisit UN parmi eux ; le taux de TVA et la déductibilité viennent du RÉFÉRENTIEL, pas du LLM → il ne peut pas les inventer.",
     file: "server/app/agents.py",
     code: `def code_node(state: GraphState) -> dict:
@@ -364,7 +350,7 @@ const STEP_DOCS: Record<string, { title: string; use: string; file: string; code
     return {"coding": coding, "retrieved": candidates}`,
   },
   draft: {
-    title: "Rédaction — l'écriture comptable (déterministe)",
+    title: "Rédaction : l'écriture comptable (déterministe)",
     use: "Les montants HT / TVA / TTC sont CALCULÉS en Python, jamais générés par le LLM. On ne laisse pas une IA faire l'arithmétique sur de l'argent.",
     file: "server/app/agents.py",
     code: `def draft_node(state: GraphState) -> dict:
@@ -375,8 +361,8 @@ const STEP_DOCS: Record<string, { title: string; use: string; file: string; code
             montant_ht=ht, montant_tva=tva, montant_ttc=round(ttc, 2), ...)}`,
   },
   verify: {
-    title: "Vérification — agent de contrôle indépendant",
-    use: "Un LLM SÉPARÉ contrôle l'ancrage et la cohérence. Il peut renvoyer corriger (la boucle) ; si un champ essentiel manque (montant), on escalade à l'humain — jamais d'invention.",
+    title: "Vérification : agent de contrôle indépendant",
+    use: "Un LLM SÉPARÉ contrôle l'ancrage et la cohérence. Il peut renvoyer corriger (la boucle) ; si un champ essentiel manque (montant), on escalade à l'humain : jamais d'invention.",
     file: "server/app/agents.py",
     code: `def verify_node(state: GraphState) -> dict:
     result: Verification = structured(Verification).invoke(prompt)
@@ -439,7 +425,7 @@ function Chain({
         {steps.map((s, i) => (
           <div className="node-group" key={s.key}>
             <span className="conn" style={{ animationDelay: `${i * 0.15}s` }}>
-              ——▸
+              ::▸
             </span>
             <button
               type="button"
@@ -461,7 +447,7 @@ function Chain({
       <div className="chain-loop">
         <span className="loop-arc" />
         <span className="loop-lbl">
-          ↺ boucle de vérification — renvoi en correction si incohérent
+          ↺ boucle de vérification : renvoi en correction si incohérent
           {result && result.retries > 0 ? ` · ${result.retries} exécutée(s)` : " · max 2"}
         </span>
       </div>
@@ -552,7 +538,7 @@ function Pipeline({ r }: { r: PipelineResult }) {
 
           {r.retrieved.length > 0 && (
             <details className="trace">
-              <summary>Traçabilité — {r.retrieved.length} candidats récupérés</summary>
+              <summary>Traçabilité : {r.retrieved.length} candidats récupérés</summary>
               <ul>
                 {r.retrieved.map((c) => (
                   <li key={c.compte} className={c.compte === r.coding?.compte ? "chosen" : ""}>
@@ -599,7 +585,7 @@ function Pipeline({ r }: { r: PipelineResult }) {
             <ul className="issues">
               {v.issues.map((i, idx) => (
                 <li key={idx} className={i.severite}>
-                  <strong>{i.champ}</strong> — {i.probleme}
+                  <strong>{i.champ}</strong> : {i.probleme}
                 </li>
               ))}
               {v.needs_human && <li className="human">→ Escalade à un validateur humain.</li>}
@@ -641,7 +627,7 @@ function Field({ k, val }: { k: string; val: string | null }) {
   return (
     <div className="field">
       <span className="f-k">{k}</span>
-      <span className={`f-v ${val ? "" : "null"}`}>{val ?? "—"}</span>
+      <span className={`f-v ${val ? "" : "null"}`}>{val ?? "-"}</span>
     </div>
   );
 }
