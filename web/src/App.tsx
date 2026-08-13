@@ -283,8 +283,8 @@ function Onboard() {
         Obtenez l'écriture comptable.
       </h2>
       <p className="onboard-ex">
-        Voix, photo ou texte : des agents l'extraient, trouvent le bon <strong>compte comptable</strong>
-        {" "}et la vérifient. Vous validez.
+        Voix, photo ou texte : des agents extraient les informations essentielles, trouvent le bon
+        {" "}<strong>compte comptable</strong> associé et vérifient la conformité. Vous validez.
       </p>
       <p className="onboard-out">
         Essayez : dites <em>«&nbsp;taxi, 34&nbsp;€&nbsp;»</em>.
