@@ -8,7 +8,7 @@ Répartition volontaire :
                                  JAMAIS un LLM. On calcule, on n'invente pas).
 """
 
-from .schemas import GraphState, Extraction, Coding, CodingChoice, Ecriture, Verification
+from .schemas import GraphState, Extraction, Coding, CodingChoice, Ecriture, Verification, Issue
 from .llm import structured
 from .rag import get_referential
 
@@ -78,7 +78,11 @@ def code_node(state: GraphState) -> dict:
 def draft_node(state: GraphState) -> dict:
     ex, co = state.extraction, state.coding
     ttc = ex.montant_ttc or 0.0
-    taux = co.tva_taux or 0.0
+
+    # Le taux imprimé sur le justificatif FAIT FOI (c'est la pièce comptable) ;
+    # le taux usuel du référentiel n'est qu'un défaut quand la source ne le donne
+    # pas (dictée vocale sans taux, par ex.).
+    taux = ex.tva_taux if ex.tva_taux is not None else (co.tva_taux or 0.0)
 
     # Calcul comptable — PUR PYTHON, aucune IA sur les chiffres.
     ht = round(ttc / (1 + taux / 100), 2) if taux else round(ttc, 2)
@@ -115,6 +119,29 @@ def verify_node(state: GraphState) -> dict:
         "correction_hint. Sinon ok=true."
     )
     result: Verification = structured(Verification).invoke(prompt)
+
+    # Garde-fou déterministe : le taux TVA imprimé sur le justificatif doit
+    # coller au taux usuel du compte choisi. S'ils divergent, on ne l'avale pas
+    # en silence — on lève un avertissement (compte mal deviné ou dépense à taux
+    # atypique). Le montant reste juste (calculé sur le taux du reçu), mais le
+    # CODAGE mérite un œil humain.
+    if (
+        ex.tva_taux is not None
+        and co.tva_taux is not None
+        and abs(ex.tva_taux - co.tva_taux) > 0.01
+    ):
+        result.issues.append(
+            Issue(
+                champ="tva_taux",
+                probleme=(
+                    f"Taux TVA du justificatif ({ex.tva_taux}%) ≠ taux usuel du "
+                    f"compte {co.compte} ({co.tva_taux}%) : vérifier le compte ou "
+                    "la nature de la dépense."
+                ),
+                severite="avertissement",
+            )
+        )
+
     # Garde-fou déterministe : SEUL le montant est bloquant (sans montant, pas
     # d'écriture possible). Une date manquante n'escalade pas — on la traitera
     # à la validation. On ne délègue pas cette règle-métier au LLM.

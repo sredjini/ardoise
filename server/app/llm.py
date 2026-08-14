@@ -53,8 +53,9 @@ def _vision_llm() -> ChatOpenAI:
 _OCR_PROMPT = (
     "Cette image est un justificatif de dépense (ticket de caisse, reçu, facture). "
     "Lis-le et résume la dépense en UNE phrase française, comme si un salarié la "
-    "dictait pour sa note de frais : nature ou marchand, montant TTC en euros, et "
-    "la date si elle est lisible. N'invente aucune information absente."
+    "dictait pour sa note de frais : nature ou marchand, montant TTC en euros, "
+    "le taux de TVA s'il est imprimé (ex: « TVA 10% »), et la date si elle est "
+    "lisible. N'invente aucune information absente."
 )
 
 

@@ -578,7 +578,14 @@ function stepData(step: string, r: PipelineResult): React.ReactNode {
           <Field k="Marchand" val={ex.marchand} />
           <Field k="Motif" val={ex.motif} />
           <Field k="Date" val={ex.date} />
-          <Field k="Montant TTC" val={ex.montant_ttc != null ? `${ex.montant_ttc} €` : null} />
+          <Field
+            k="Montant TTC"
+            val={
+              ex.montant_ttc != null
+                ? `${ex.montant_ttc} €${ex.tva_taux != null ? ` · TVA ${ex.tva_taux}%` : ""}`
+                : null
+            }
+          />
         </div>
         {ex.champs_manquants.length > 0 && (
           <div className="chips warn-chips">
