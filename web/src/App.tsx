@@ -162,7 +162,7 @@ export default function App() {
       <main className={`layout ${started ? "" : "onboard"}`}>
         {/* Colonne gauche : le CHOIX de la source (voix / photo / texte) */}
         <aside className="panel side">
-          <div className="modes-label">ENTRÉE : 3 sources, 1 seul cycle</div>
+          <div className="modes-label">{started ? "Nouvelle dépense" : "Votre dépense"}</div>
           <div className="modes">
             <button
               className={`record ${listening ? "on" : ""}`}
@@ -221,26 +221,30 @@ export default function App() {
             {loading ? "Traitement…" : "Traiter →"}
           </button>
 
-          <div className="examples">
-            <span>Exemples</span>
-            {EXEMPLES.map((ex) => (
-              <button
-                key={ex}
-                className="ex"
-                disabled={loading}
-                onClick={() => {
-                  setTranscript(ex);
-                  setSource("texte");
-                  setPhotoPreview(null);
-                }}
-              >
-                {ex}
+          {/* Les exemples n'aident qu'au premier essai : dès qu'un résultat
+              existe, on les masque pour épurer la colonne (surface produit). */}
+          {!started && (
+            <div className="examples">
+              <span>Exemples</span>
+              {EXEMPLES.map((ex) => (
+                <button
+                  key={ex}
+                  className="ex"
+                  disabled={loading}
+                  onClick={() => {
+                    setTranscript(ex);
+                    setSource("texte");
+                    setPhotoPreview(null);
+                  }}
+                >
+                  {ex}
+                </button>
+              ))}
+              <button className="ex ticket" onClick={loadTicket} disabled={loading}>
+                📷 ticket de caisse (exemple)
               </button>
-            ))}
-            <button className="ex ticket" onClick={loadTicket} disabled={loading}>
-              📷 ticket de caisse (exemple)
-            </button>
-          </div>
+            </div>
+          )}
         </aside>
 
         {/* Colonne centrale : le livrable, puis le pipeline interactif */}
