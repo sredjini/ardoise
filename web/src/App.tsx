@@ -401,6 +401,14 @@ function Result({
     if (result && !loading) setSelected(result.coding ? "code" : "extract");
   }, [result, loading]);
 
+  // Accordéon « raisonnement » : REPLIÉ par défaut. La surface produit ne montre
+  // que le résultat ; toute la pipeline est à la demande. On le referme à chaque
+  // nouveau traitement.
+  const [showReasoning, setShowReasoning] = useState(false);
+  useEffect(() => {
+    setShowReasoning(false);
+  }, [result]);
+
   const inLabel = source ? source.toUpperCase() : "ENTRÉE";
   const inIcon = source === "voix" ? "🎙" : source === "photo" ? "📷" : "⌨";
 
@@ -412,61 +420,75 @@ function Result({
 
   return (
     <div className="result">
-      {/* 1. LE LIVRABLE — écriture + verdict, tout de suite */}
+      {/* Pendant le traitement : un état calme, pas la machinerie. */}
+      {loading && <div className="processing">▚ Les agents traitent votre dépense…</div>}
+
+      {/* LE LIVRABLE — le résultat seul, tout de suite (surface produit). */}
       {result && <Outcome r={result} />}
 
-      {/* 2. LE PIPELINE — stepper interactif (la navigation) */}
-      <div className={`chain ${loading ? "is-run" : ""}`}>
-        <div className="chain-row">
-          <div className={`node in ${source ? "done" : "idle"}`}>
-            <span className="node-ic">{inIcon}</span>
-            <span className="node-l">{inLabel}</span>
-          </div>
-          {steps.map((s, i) => (
-            <div className="node-group" key={s.key}>
-              <span className="conn" style={{ animationDelay: `${i * 0.15}s` }}>
-                ::▸
-              </span>
-              <button
-                type="button"
-                className={`node ${nodeState(s.key)} ${selected === s.key ? "sel" : ""}`}
-                style={{ animationDelay: `${i * 0.2}s` }}
-                onClick={() => setSelected(selected === s.key ? null : s.key)}
-                aria-expanded={selected === s.key}
-                title="Voir ce que fait cette étape"
-              >
-                <span className="node-n">{s.n}</span>
-                <span className="node-l">{s.label}</span>
-                <span className="node-s" />
-              </button>
+      {/* La pipeline complète : REPLIÉE par défaut, révélée à la demande. */}
+      {result && (
+        <div className="reasoning">
+          <button
+            type="button"
+            className="reasoning-toggle"
+            onClick={() => setShowReasoning((s) => !s)}
+            aria-expanded={showReasoning}
+          >
+            <span className="rt-caret">{showReasoning ? "▴" : "▾"}</span>
+            {showReasoning ? "Masquer le raisonnement" : "Voir le raisonnement des agents"}
+            <span className="rt-sub">extraction → imputation → rédaction → vérification</span>
+          </button>
+
+          {showReasoning && (
+            <div className="reasoning-body">
+              <div className="chain">
+                <div className="chain-row">
+                  <div className={`node in ${source ? "done" : "idle"}`}>
+                    <span className="node-ic">{inIcon}</span>
+                    <span className="node-l">{inLabel}</span>
+                  </div>
+                  {steps.map((s) => (
+                    <div className="node-group" key={s.key}>
+                      <span className="conn">::▸</span>
+                      <button
+                        type="button"
+                        className={`node ${nodeState(s.key)} ${selected === s.key ? "sel" : ""}`}
+                        onClick={() => setSelected(selected === s.key ? null : s.key)}
+                        aria-expanded={selected === s.key}
+                        title="Voir ce que fait cette étape"
+                      >
+                        <span className="node-n">{s.n}</span>
+                        <span className="node-l">{s.label}</span>
+                        <span className="node-s" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="chain-loop">
+                  <span className="loop-arc" />
+                  <span className="loop-lbl">
+                    ↺ boucle de vérification : renvoi en correction si incohérent
+                    {result.retries > 0 ? ` · ${result.retries} exécutée(s)` : " · max 2"}
+                  </span>
+                </div>
+              </div>
+
+              {selected ? (
+                <StepDetail step={selected} r={result} onClose={() => setSelected(null)} />
+              ) : (
+                <div className="chain-hint">▸ clique une étape pour voir ce qu'elle produit + le code</div>
+              )}
             </div>
-          ))}
+          )}
         </div>
-
-        {/* La boucle de retry, dessinée sous la chaîne */}
-        <div className="chain-loop">
-          <span className="loop-arc" />
-          <span className="loop-lbl">
-            ↺ boucle de vérification : renvoi en correction si incohérent
-            {result && result.retries > 0 ? ` · ${result.retries} exécutée(s)` : " · max 2"}
-          </span>
-        </div>
-      </div>
-
-      {loading && <div className="running">▚ traitement en cours…</div>}
-
-      {/* 3. UNE fiche d'étape à la fois — données produites + code à la demande */}
-      {result &&
-        (selected ? (
-          <StepDetail step={selected} r={result} onClose={() => setSelected(null)} />
-        ) : (
-          <div className="chain-hint">▸ clique une étape pour voir ce qu'elle produit + le code</div>
-        ))}
+      )}
     </div>
   );
 }
 
-// Le livrable : verdict + écriture comptable finale (ce que l'utilisateur obtient).
+// Le livrable : le résultat seul, façon reçu centré (surface produit épurée).
 function Outcome({ r }: { r: PipelineResult }) {
   const cls = r.status === "validated" ? "ok" : r.status === "needs_human" ? "warn" : "fail";
   const label =
@@ -478,33 +500,42 @@ function Outcome({ r }: { r: PipelineResult }) {
       ? "Entrée non reconnue comme une dépense"
       : "Échec";
   const e = r.ecriture;
+  const ex = r.extraction;
+  // Taux réellement appliqué : celui du justificatif s'il existe, sinon du compte.
+  const taux = ex?.tva_taux ?? r.coding?.tva_taux ?? null;
+  const meta = [ex?.marchand, ex?.motif, ex?.date].filter(Boolean).join(" · ");
   return (
     <div className={`outcome ${cls}`}>
       <div className="outcome-verdict">
         <span className="oc-dot" />
         <strong>{label}</strong>
-        {r.retries > 0 && <span className="retries">{r.retries} correction(s)</span>}
       </div>
       {e && r.coding && (
-        <div className="outcome-entry">
-          <div className="oe-account">
-            <span className="oe-num">{r.coding.compte}</span>
-            <span className="oe-lib">{r.coding.libelle}</span>
+        <div className="receipt">
+          <div className="rc-account">
+            <span className="rc-num">{r.coding.compte}</span>
+            <span className="rc-lib">{r.coding.libelle}</span>
           </div>
-          <div className="oe-amounts">
-            <span>
-              <em>HT</em>
-              {e.montant_ht.toFixed(2)} €
-            </span>
-            <span>
-              <em>TVA</em>
-              {e.montant_tva.toFixed(2)} €
-            </span>
-            <span className="oe-ttc">
-              <em>TTC</em>
-              {e.montant_ttc.toFixed(2)} €
-            </span>
-          </div>
+          <table className="rc-amounts">
+            <tbody>
+              <tr>
+                <td>HT</td>
+                <td>{e.montant_ht.toFixed(2)} €</td>
+              </tr>
+              <tr>
+                <td>TVA{taux != null ? ` ${taux}%` : ""}</td>
+                <td>{e.montant_tva.toFixed(2)} €</td>
+              </tr>
+              <tr className="rc-total">
+                <td>TTC</td>
+                <td>{e.montant_ttc.toFixed(2)} €</td>
+              </tr>
+            </tbody>
+          </table>
+          {meta && <div className="rc-meta">{meta}</div>}
+          {r.retries > 0 && (
+            <div className="rc-retries">{r.retries} correction(s) automatique(s)</div>
+          )}
         </div>
       )}
     </div>

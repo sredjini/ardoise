@@ -197,22 +197,51 @@ button.node { font: inherit; color: inherit; text-align: left; cursor: pointer; 
 .code-toggle:hover { color: var(--ink); }
 .code-toggle .code-file { margin-left: auto; color: var(--ink-soft); text-transform: none; letter-spacing: 0; }
 
-/* --- Le livrable (outcome) : verdict + écriture finale, en tête de résultat --- */
-.result { display: flex; flex-direction: column; }
-.outcome { border: 1px solid var(--line-ink); padding: 15px 16px; margin-bottom: 20px; }
-.outcome-verdict { display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; font-weight: 700; }
-.outcome-verdict .oc-dot { width: 11px; height: 11px; flex-shrink: 0; }
-.outcome-verdict .retries { margin-left: auto; font-size: 10.5px; font-weight: 400; letter-spacing: .5px; color: var(--ink-soft); }
+/* --- Le livrable : le résultat seul, surface produit épurée (Apple-calm) --- */
+.result { display: flex; flex-direction: column; align-items: stretch; }
+
+/* Traitement : un état calme et centré, pas la machinerie. */
+.processing {
+  text-align: center; padding: 64px 0; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--accent); animation: connpulse .9s steps(1) infinite;
+}
+
+.outcome { max-width: 380px; margin: 26px auto 0; text-align: center; }
+.outcome-verdict {
+  display: inline-flex; align-items: center; gap: 9px; text-transform: uppercase;
+  letter-spacing: 1px; font-size: 12px; font-weight: 700; margin-bottom: 22px;
+}
+.outcome-verdict .oc-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .outcome.ok { color: var(--ok); } .outcome.ok .oc-dot { background: var(--ok); }
 .outcome.warn { color: var(--warn); } .outcome.warn .oc-dot { background: var(--warn); }
 .outcome.fail { color: var(--err); } .outcome.fail .oc-dot { background: var(--err); }
-.outcome-entry { display: flex; align-items: center; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink); flex-wrap: wrap; }
-.oe-account { display: flex; align-items: baseline; gap: 11px; }
-.oe-num { font-size: 26px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
-.oe-lib { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-2); }
-.oe-amounts { display: flex; gap: 18px; margin-left: auto; }
-.oe-amounts span { display: flex; flex-direction: column; gap: 3px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.oe-amounts em { font-size: 9px; font-weight: 400; font-style: normal; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-soft); }
+
+/* Le reçu comptable */
+.receipt { color: var(--ink); text-align: left; border: 1px solid var(--line-ink); padding: 26px 28px; }
+.rc-account { text-align: center; margin-bottom: 20px; }
+.rc-num { display: block; font-size: 30px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+.rc-lib { display: block; margin-top: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-soft); }
+.rc-amounts { width: 100%; border-collapse: collapse; }
+.rc-amounts td { padding: 9px 0; font-size: 14px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.rc-amounts td:first-child { text-transform: uppercase; letter-spacing: .5px; font-size: 11px; color: var(--ink-soft); }
+.rc-amounts td:last-child { text-align: right; font-weight: 700; }
+.rc-total td { border-bottom: none; border-top: 2px solid var(--line-ink); padding-top: 13px; font-size: 16px; }
+.rc-total td:first-child { color: var(--ink); font-size: 13px; }
+.rc-meta { margin-top: 18px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); }
+.rc-retries { margin-top: 8px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--warn); }
+
+/* Accordéon « raisonnement » : la pipeline complète, à la demande */
+.reasoning { margin: 30px auto 0; max-width: 640px; width: 100%; }
+.reasoning-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  width: 100%; background: none; border: none; border-top: 1px solid var(--line);
+  padding: 16px 0 0; cursor: pointer; font-family: var(--mono); color: var(--ink-soft);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px; transition: color .12s;
+}
+.reasoning-toggle:hover { color: var(--ink); }
+.reasoning-toggle .rt-caret { color: var(--accent); }
+.reasoning-toggle .rt-sub { width: 100%; text-align: center; font-size: 9.5px; letter-spacing: .5px; color: var(--ink-soft); text-transform: none; }
+.reasoning-body { margin-top: 20px; animation: docin .3s ease; }
 
 /* --- Détail d'étape : contenu par type --- */
 /* Extraction : grille de champs */
@@ -272,6 +301,5 @@ button.node { font: inherit; color: inherit; text-align: left; cursor: pointer; 
   .layout { grid-template-columns: 1fr; }
   .side { position: static; border-right: none; border-bottom: 1px solid var(--line-ink); padding: 0 0 22px; }
   .main { padding: 22px 0; }
-  .outcome-entry { gap: 12px; }
-  .oe-amounts { margin-left: 0; gap: 14px; }
+  .receipt { padding: 22px 20px; }
 }
