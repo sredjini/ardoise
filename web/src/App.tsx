@@ -280,11 +280,12 @@ function Onboard() {
       <h2>
         Dictez une dépense.
         <br />
-        Obtenez l'écriture comptable.
+        Ardoise s'occupe de la compta.
       </h2>
       <p className="onboard-ex">
-        Voix, photo ou texte : des agents extraient les informations essentielles, trouvent le bon
-        {" "}<strong>compte comptable</strong> associé et vérifient la conformité. Vous validez.
+        Voix, photo ou texte : Ardoise range la dépense dans la bonne{" "}
+        <strong>catégorie comptable</strong>, calcule la TVA et prépare la ligne prête à
+        enregistrer. Vous n'avez plus qu'à valider.
       </p>
       <p className="onboard-out">
         Essayez : dites <em>«&nbsp;taxi, 34&nbsp;€&nbsp;»</em>.
