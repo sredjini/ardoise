@@ -142,10 +142,23 @@ def verify_node(state: GraphState) -> dict:
             )
         )
 
-    # Garde-fou déterministe : SEUL le montant est bloquant (sans montant, pas
-    # d'écriture possible). Une date manquante n'escalade pas — on la traitera
-    # à la validation. On ne délègue pas cette règle-métier au LLM.
+    # Garde-fous déterministes (règles métier qu'on ne délègue pas au LLM).
+    # Sans MONTANT, aucune écriture n'est possible → bloquant.
     if ex.montant_ttc is None:
-        result.needs_human = True
         result.ok = False
+        result.needs_human = True
+    # Une écriture comptable EXIGE une date. Les montants sont calculables sans,
+    # mais on ne valide jamais une pièce sans date — et on ne l'invente pas : on
+    # escalade pour la faire renseigner. L'app ne prétend pas « validé » quand un
+    # champ requis manque (cohérence avec les champs_manquants de l'extraction).
+    elif ex.date is None:
+        result.ok = False
+        result.needs_human = True
+        result.issues.append(
+            Issue(
+                champ="date",
+                probleme="Date absente : à renseigner avant enregistrement.",
+                severite="avertissement",
+            )
+        )
     return {"verification": result}

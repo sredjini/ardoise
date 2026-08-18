@@ -509,12 +509,16 @@ function Outcome({ r }: { r: PipelineResult }) {
   // Taux réellement appliqué : celui du justificatif s'il existe, sinon du compte.
   const taux = ex?.tva_taux ?? r.coding?.tva_taux ?? null;
   const meta = [ex?.marchand, ex?.motif, ex?.date].filter(Boolean).join(" · ");
+  const manquants = ex?.champs_manquants ?? [];
   return (
     <div className={`outcome ${cls}`}>
       <div className="outcome-verdict">
         <span className="oc-dot" />
         <strong>{label}</strong>
       </div>
+      {r.status === "needs_human" && manquants.length > 0 && (
+        <p className="oc-todo">Il manque : {manquants.join(" · ")}</p>
+      )}
       {e && r.coding && (
         <div className="receipt">
           <div className="rc-account">

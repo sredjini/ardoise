@@ -212,6 +212,7 @@ button.node { font: inherit; color: inherit; text-align: left; cursor: pointer; 
   letter-spacing: 1px; font-size: 12px; font-weight: 700; margin-bottom: 22px;
 }
 .outcome-verdict .oc-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.oc-todo { margin: -12px 0 22px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--warn); }
 .outcome.ok { color: var(--ok); } .outcome.ok .oc-dot { background: var(--ok); }
 .outcome.warn { color: var(--warn); } .outcome.warn .oc-dot { background: var(--warn); }
 .outcome.fail { color: var(--err); } .outcome.fail .oc-dot { background: var(--err); }
